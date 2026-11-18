@@ -1,0 +1,232 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasParentUser(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.uid == request.auth.uid;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'loginId', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'loginId', 'displayName', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.loginId is string && data.loginId.size() >= 1 && data.loginId.size() <= 160
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidWorkspaceSettings(data, userId) {
+      return data.keys().hasAll(['ownerId', 'dailyPledge', 'activeBotId', 'syncedAt'])
+        && data.keys().hasOnly(['ownerId', 'dailyPledge', 'activeBotId', 'syncedAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && data.dailyPledge is string && data.dailyPledge.size() <= 500
+        && data.activeBotId is string && data.activeBotId.size() <= 128
+        && data.syncedAt is timestamp;
+    }
+
+    function isValidBotDoc(data, userId, botId) {
+      return data.keys().hasAll(['ownerId', 'id', 'title', 'subtitle', 'status', 'updatedAt', 'notes', 'template', 'syncedAt'])
+        && data.keys().hasOnly(['ownerId', 'id', 'title', 'subtitle', 'status', 'updatedAt', 'notes', 'coverImage', 'externalLinks', 'publishedLinks', 'template', 'syncedAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && isValidId(data.id)
+        && data.id == botId
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+        && data.subtitle is string && data.subtitle.size() <= 160
+        && data.status in ['in_progress', 'completed', 'published']
+        && data.updatedAt is string && data.updatedAt.size() <= 20
+        && data.notes is string && data.notes.size() <= 2000
+        && (!('coverImage' in data) || (data.coverImage is string && data.coverImage.size() <= 400000))
+        && (!('externalLinks' in data) || (data.externalLinks is list && data.externalLinks.size() <= 30 && (data.externalLinks.size() == 0 || data.externalLinks[0] is map)))
+        && (!('publishedLinks' in data) || (data.publishedLinks is list && data.publishedLinks.size() <= 30 && (data.publishedLinks.size() == 0 || data.publishedLinks[0] is map)))
+        && data.template is map
+        && data.syncedAt is timestamp;
+    }
+
+    function isValidGoalDoc(data, userId, goalId) {
+      return data.keys().hasAll(['ownerId', 'id', 'title', 'category', 'targetDate', 'completed', 'syncedAt'])
+        && data.keys().hasOnly(['ownerId', 'id', 'title', 'category', 'targetDate', 'completed', 'syncedAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && isValidId(data.id)
+        && data.id == goalId
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.category is string && data.category.size() <= 60
+        && data.targetDate is string && data.targetDate.size() <= 20
+        && data.completed is bool
+        && data.syncedAt is timestamp;
+    }
+
+    function isValidCalendarEventDoc(data, userId, eventId) {
+      return data.keys().hasAll(['ownerId', 'id', 'date', 'title', 'completed', 'syncedAt'])
+        && data.keys().hasOnly(['ownerId', 'id', 'date', 'title', 'botTitle', 'completed', 'syncedAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && isValidId(data.id)
+        && data.id == eventId
+        && data.date is string && data.date.size() <= 20
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && (!('botTitle' in data) || (data.botTitle is string && data.botTitle.size() <= 128))
+        && data.completed is bool
+        && data.syncedAt is timestamp;
+    }
+
+    function isValidPresetDoc(data, userId, presetId) {
+      return data.keys().hasAll(['ownerId', 'id', 'name', 'description', 'createdAt', 'systemExtraRules', 'characterExtraRules', 'writingStyle', 'outputRules', 'syncedAt'])
+        && data.keys().hasOnly(['ownerId', 'id', 'name', 'description', 'createdAt', 'systemExtraRules', 'characterExtraRules', 'writingStyle', 'outputRules', 'syncedAt'])
+        && isValidId(data.ownerId)
+        && data.ownerId == userId
+        && data.ownerId == request.auth.uid
+        && isValidId(data.id)
+        && data.id == presetId
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.description is string && data.description.size() <= 400
+        && data.createdAt is string && data.createdAt.size() <= 20
+        && data.systemExtraRules is list && data.systemExtraRules.size() <= 30 && (data.systemExtraRules.size() == 0 || data.systemExtraRules[0] is string)
+        && data.characterExtraRules is list && data.characterExtraRules.size() <= 30 && (data.characterExtraRules.size() == 0 || data.characterExtraRules[0] is string)
+        && data.writingStyle is map
+        && data.outputRules is list && data.outputRules.size() <= 30 && (data.outputRules.size() == 0 || data.outputRules[0] is string)
+        && data.syncedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId) && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['loginId', 'displayName', 'updatedAt']);
+      allow delete: if false;
+
+      match /settings/{settingId} {
+        allow get: if isValidId(userId) && isValidId(settingId) && isOwner(userId) && hasParentUser(userId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(settingId) && settingId == 'workspace'
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidWorkspaceSettings(incoming(), userId)
+          && incoming().syncedAt == request.time;
+        allow update: if isValidId(userId) && isValidId(settingId) && settingId == 'workspace'
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidWorkspaceSettings(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().syncedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['dailyPledge', 'activeBotId', 'syncedAt']);
+        allow delete: if false;
+      }
+
+      match /bots/{botId} {
+        allow get: if isValidId(userId) && isValidId(botId) && isOwner(userId) && hasParentUser(userId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(botId)
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidBotDoc(incoming(), userId, botId)
+          && incoming().syncedAt == request.time;
+        allow update: if isValidId(userId) && isValidId(botId)
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidBotDoc(incoming(), userId, botId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().id == existing().id
+          && incoming().syncedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt', 'syncedAt'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['coverImage', 'externalLinks', 'publishedLinks', 'updatedAt', 'syncedAt'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['title', 'subtitle', 'status', 'updatedAt', 'notes', 'coverImage', 'externalLinks', 'publishedLinks', 'template', 'syncedAt'])
+          );
+        allow delete: if isValidId(userId) && isValidId(botId) && isOwner(userId) && hasParentUser(userId);
+      }
+
+      match /goals/{goalId} {
+        allow get: if isValidId(userId) && isValidId(goalId) && isOwner(userId) && hasParentUser(userId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(goalId)
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidGoalDoc(incoming(), userId, goalId)
+          && incoming().syncedAt == request.time;
+        allow update: if isValidId(userId) && isValidId(goalId)
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidGoalDoc(incoming(), userId, goalId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().id == existing().id
+          && incoming().syncedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'syncedAt'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['title', 'category', 'targetDate', 'completed', 'syncedAt'])
+          );
+        allow delete: if isValidId(userId) && isValidId(goalId) && isOwner(userId) && hasParentUser(userId);
+      }
+
+      match /calendarEvents/{eventId} {
+        allow get: if isValidId(userId) && isValidId(eventId) && isOwner(userId) && hasParentUser(userId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(eventId)
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidCalendarEventDoc(incoming(), userId, eventId)
+          && incoming().syncedAt == request.time;
+        allow update: if isValidId(userId) && isValidId(eventId)
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidCalendarEventDoc(incoming(), userId, eventId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().id == existing().id
+          && incoming().syncedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'date', 'title', 'botTitle', 'syncedAt']);
+        allow delete: if isValidId(userId) && isValidId(eventId) && isOwner(userId) && hasParentUser(userId);
+      }
+
+      match /presets/{presetId} {
+        allow get: if isValidId(userId) && isValidId(presetId) && isOwner(userId) && hasParentUser(userId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(presetId)
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidPresetDoc(incoming(), userId, presetId)
+          && incoming().syncedAt == request.time;
+        allow update: if isValidId(userId) && isValidId(presetId)
+          && isOwner(userId) && hasParentUser(userId)
+          && isValidPresetDoc(incoming(), userId, presetId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().id == existing().id
+          && incoming().syncedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'systemExtraRules', 'characterExtraRules', 'writingStyle', 'outputRules', 'syncedAt']);
+        allow delete: if isValidId(userId) && isValidId(presetId) && isOwner(userId) && hasParentUser(userId);
+      }
+    }
+  }
+}

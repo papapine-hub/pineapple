@@ -1,0 +1,8 @@
+{
+  "name": "파인애플 · 캐릭터봇 스튜디오",
+  "description": "차분한 연두빛 테마의 개인용 AI 캐릭터봇 제작 플래너, 구조화 프롬프트 빌더 및 JSON 변환 대시보드",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

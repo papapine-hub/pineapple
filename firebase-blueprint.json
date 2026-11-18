@@ -1,0 +1,275 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private user account profile isolated per authenticated UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "loginId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "loginId", "displayName", "createdAt", "updatedAt"]
+    },
+    "WorkspaceSettings": {
+      "title": "WorkspaceSettings",
+      "description": "Per-user studio preferences including daily creative pledge and active bot ID.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "dailyPledge": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "activeBotId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "syncedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "dailyPledge", "activeBotId", "syncedAt"]
+    },
+    "BotProject": {
+      "title": "BotProject",
+      "description": "Character bot creation project with structured prompt template, cover image, and external/platform links.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "subtitle": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "status": {
+          "type": "string",
+          "enum": ["in_progress", "completed", "published"]
+        },
+        "updatedAt": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "coverImage": {
+          "type": "string",
+          "maxLength": 400000
+        },
+        "externalLinks": {
+          "type": "array"
+        },
+        "publishedLinks": {
+          "type": "array"
+        },
+        "template": {
+          "type": "object"
+        },
+        "syncedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "id", "title", "subtitle", "status", "updatedAt", "notes", "template", "syncedAt"]
+    },
+    "GoalItem": {
+      "title": "GoalItem",
+      "description": "User creative goal entry.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "targetDate": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "syncedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "id", "title", "category", "targetDate", "completed", "syncedAt"]
+    },
+    "CalendarEvent": {
+      "title": "CalendarEvent",
+      "description": "Date-based production schedule entry.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "botTitle": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "syncedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "id", "date", "title", "completed", "syncedAt"]
+    },
+    "SystemPromptPreset": {
+      "title": "SystemPromptPreset",
+      "description": "Reusable system prompt, writing style, and output rules preset.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "createdAt": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "systemExtraRules": {
+          "type": "array"
+        },
+        "characterExtraRules": {
+          "type": "array"
+        },
+        "writingStyle": {
+          "type": "object"
+        },
+        "outputRules": {
+          "type": "array"
+        },
+        "syncedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "id", "name", "description", "createdAt", "systemExtraRules", "characterExtraRules", "writingStyle", "outputRules", "syncedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user account profile document"
+    },
+    "/users/{userId}/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/WorkspaceSettings" },
+      "description": "Per-user workspace settings such as daily pledge and active bot"
+    },
+    "/users/{userId}/bots/{botId}": {
+      "schema": { "$ref": "#/entities/BotProject" },
+      "description": "Per-user character bot projects"
+    },
+    "/users/{userId}/goals/{goalId}": {
+      "schema": { "$ref": "#/entities/GoalItem" },
+      "description": "Per-user creative goals"
+    },
+    "/users/{userId}/calendarEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/CalendarEvent" },
+      "description": "Per-user calendar production events"
+    },
+    "/users/{userId}/presets/{presetId}": {
+      "schema": { "$ref": "#/entities/SystemPromptPreset" },
+      "description": "Per-user reusable system prompt presets"
+    }
+  }
+}
